@@ -86,8 +86,26 @@ const addEmployee = () => {
                 choices: positions,
                 name: "role"
             },
+            {
+                type: "input",
+                message: "Does the employee have a manager ID? If so, enter it here:",
+                name: "managerID"
+            }
         ]).then(answers => {
-            console.log(answers)
+            // Assign the role id 
+            let roleID = positions.indexOf(answers.role) + 1
+            
+            // Insert the data into the employee table
+            connection.query("INSERT INTO employee SET ?", {
+                first_name: answers.firstName,
+                last_name: answers.lastName,
+                role_id: roleID,
+                manager_id: answers.managerID
+            }, err => {
+                if (err) throw err
+                console.log("Employee succesfully added!")
+                mainMenu()    
+            })
         })
 }
 
@@ -108,5 +126,6 @@ const viewAll = () => {
     connection.query("SELECT * FROM employee", (err, res) => {
         if (err) throw err
         console.table(res)
+        mainMenu()
     })
 }
