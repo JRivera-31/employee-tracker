@@ -50,6 +50,17 @@ const mainMenu = () => {
 
 }
 
+
+const viewAll = () => {
+    connection.query("SELECT * FROM employee", (err, res) => {
+        if (err) throw err
+        
+        // Displays the employees
+        console.table(res)
+        mainMenu()
+    })
+}
+
 // Get the current roles
 const getRoles = () => {
     // Declare an empty array to store the roles
@@ -110,22 +121,36 @@ const addEmployee = () => {
 }
 
 const removeEmployee = () => {
-    let viewAll = viewAll()
-
-    inquirer
-        .prompt([
-            {
-                type: "input",
-                message: "Which employee would you like to remove?",
-
-            }
-        ])
-}
-
-const viewAll = () => {
     connection.query("SELECT * FROM employee", (err, res) => {
         if (err) throw err
         console.table(res)
-        mainMenu()
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    message: "Which employee would you like to remove?",
+                    choices: () => {
+                        let employeeArr = [] // Declare empty array to store current employees in
+
+                        // Push employees to array
+                        for (let i = 0; i < res.length; i++) {
+                            employeeArr.push(`${res[i].id} ${res[i].first_name} ${res[i].last_name}`)
+                        }
+
+                        return employeeArr
+                    },
+                    name: "employee"
+                }
+            ])
+            .then(answer => {
+                let employeeID = parseInt(answer.employee.split(' ')[0])
+                
+                connection.query("DELETE FROM employee WHERE id = ?", [employeeID], (err, res) => {
+                    if (err) throw err
+                    console.log("Employee successfully deleted from database")
+                    mainMenu()
+                })
+            })
+
     })
 }
