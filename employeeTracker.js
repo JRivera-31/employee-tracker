@@ -34,7 +34,7 @@ const mainMenu = () => {
         .then(answer => {
             switch (answer.choice) {
                 case "View All Employees":
-                    viewAll()
+                    viewAllEmp()
                     break
                 case "Add Employee":
                     addEmployee()
@@ -44,14 +44,23 @@ const mainMenu = () => {
                     break
                 case "Exit":
                     connection.end()
-                    break  
+                    break
+                case "View All Departments":
+                    viewDepartments()
+                    break
+                case "Add Department":
+                    addDepartment()
+                    break
+                case "Remove Department":
+                    removeDepartment()
+                    break
             }
         })
 
 }
 
 
-const viewAll = () => {
+const viewAllEmp = () => {
     connection.query("SELECT * FROM employee", (err, res) => {
         if (err) throw err
         
@@ -77,7 +86,9 @@ const getRoles = () => {
     return roleArr
 }
 
+// To add an employee
 const addEmployee = () => {
+    // Assign getRoles function to a variable
     let positions = getRoles()
     inquirer
         .prompt([
@@ -120,6 +131,7 @@ const addEmployee = () => {
         })
 }
 
+// To remove employee
 const removeEmployee = () => {
     connection.query("SELECT * FROM employee", (err, res) => {
         if (err) throw err
@@ -153,4 +165,38 @@ const removeEmployee = () => {
             })
 
     })
+}
+
+// View departments
+const viewDepartments = () => {
+    connection.query("SELECT * FROM department", (err, res) => {
+        if (err) throw err
+        
+        // Displays the employees
+        console.table(res)
+        mainMenu()
+    })
+}
+
+// Add departments 
+const addDepartment = () => {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                message: "What is the name of the department you would like to add?",
+                name: "department"
+            }
+        ])
+        .then(answer => {
+            let department = answer.department.charAt(0).toUpperCase() + answer.department.slice(1).trim()
+            
+            connection.query("INSERT INTO department SET ?", {
+                name: department
+            }, err => {
+                if (err) throw err
+                    console.log("Successfully added department")
+                mainMenu()    
+            })
+        })
 }
