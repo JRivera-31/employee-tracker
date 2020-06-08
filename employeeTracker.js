@@ -54,6 +54,15 @@ const mainMenu = () => {
                 case "Remove Department":
                     removeDepartment()
                     break
+                case "View All Roles":
+                    viewRoles()
+                    break
+                case "Add Role":
+                    addRole()
+                    break
+                case "Remove Role":
+                    removeRole()
+                    break
             }
         })
 
@@ -234,5 +243,15 @@ const removeDepartment = () => {
                 })
             })
 
+    })
+}
+
+const viewRoles = () => {
+    connection.query("SELECT * FROM role", (err, res) => {
+        if (err) throw err
+        
+        // Displays the employees
+        console.table(res)
+        mainMenu()
     })
 }
