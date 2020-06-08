@@ -155,7 +155,7 @@ const removeEmployee = () => {
                 }
             ])
             .then(answer => {
-                let employeeID = parseInt(answer.employee.split(' ')[0])
+                let employeeID = parseInt(answer.employee.split(' ')[0]) // parse int response and split at spaces then return first index
                 
                 connection.query("DELETE FROM employee WHERE id = ?", [employeeID], (err, res) => {
                     if (err) throw err
@@ -199,4 +199,40 @@ const addDepartment = () => {
                 mainMenu()    
             })
         })
+}
+
+// To remove departments
+const removeDepartment = () => {
+    connection.query("SELECT * FROM department", (err, res) => {
+        if (err) throw err
+        console.table(res)
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    message: "Which department would you like to remove?",
+                    choices: () => {
+                        let departmentArr = [] // Declare empty array to store current departments in
+
+                        // Push departments to array
+                        for (let i = 0; i < res.length; i++) {
+                            departmentArr.push(`${res[i].id} ${res[i].name}`)
+                        }
+
+                        return departmentArr
+                    },
+                    name: "department"
+                }
+            ])
+            .then(answer => {
+                let departmentID = parseInt(answer.department.split(' ')[0]) // parse int response and split at spaces then return first index
+                
+                connection.query("DELETE FROM department WHERE id = ?", [departmentID], (err, res) => {
+                    if (err) throw err
+                    console.log("Department successfully deleted from database")
+                    mainMenu()
+                })
+            })
+
+    })
 }
