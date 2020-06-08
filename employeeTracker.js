@@ -12,10 +12,101 @@ const connection = mysql.createConnection({
 
   // Your password
   password: "rootroot",
-  database: "greatbay_db"
+  database: "employee_tracker_db"
 });
 
 connection.connect(err => {
     if (err) throw err;
-    initQuestions()
+    mainMenu()
 });
+
+const mainMenu = () => {
+    inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "What would you like to do?",
+                name: "choice",
+                choices: ["View All Employees", "Add Employee", "Remove Employee", "View All Departments", "Add Department", "Remove Department",
+                "View All Roles", "Add Role", "Remove Role", "Update employee roles", "Exit"]
+            }
+        ])
+        .then(answer => {
+            switch (answer.choice) {
+                case "View All Employees":
+                    viewAll()
+                    break
+                case "Add Employee":
+                    addEmployee()
+                    break
+                case "Remove Employee":
+                    removeEmployee()
+                    break
+                case "Exit":
+                    connection.end()
+                    break  
+            }
+        })
+
+}
+
+// Get the current roles
+const getRoles = () => {
+    // Declare an empty array to store the roles
+    let roleArr = []
+
+    // Query for the role titles and push them to array
+    connection.query("SELECT title FROM role", (err, res) => {
+        if (err) throw err
+        for (let i = 0; i < res.length; i++) {
+            roleArr.push(res[i].title)
+        }
+    })
+
+    return roleArr
+}
+
+const addEmployee = () => {
+    let positions = getRoles()
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                message: "What is the employees first name?",
+                name: "firstName"
+            },
+            {
+                type: "input",
+                message: "What is the employees last name?",
+                name: "lastName"
+            },
+            {
+                type: "list",
+                message: "What is the employees role?",
+                choices: positions,
+                name: "role"
+            },
+        ]).then(answers => {
+            console.log(answers)
+        })
+}
+
+const removeEmployee = () => {
+    let viewAll = viewAll()
+
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                message: "Which employee would you like to remove?",
+
+            }
+        ])
+}
+
+const viewAll = () => {
+    connection.query("SELECT * FROM employee", (err, res) => {
+        if (err) throw err
+        console.table(res)
+    })
+}
