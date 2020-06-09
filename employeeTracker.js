@@ -28,7 +28,7 @@ const mainMenu = () => {
                 message: "What would you like to do?",
                 name: "choice",
                 choices: ["View All Employees", "Add Employee", "Remove Employee", "View All Departments", "Add Department", "Remove Department",
-                "View All Roles", "Add Role", "Remove Role", "Update employee roles", "Exit"]
+                "View All Roles", "Add Role", "Remove Role", "Update Employee Role", "Exit"]
             }
         ])
         .then(answer => {
@@ -62,6 +62,9 @@ const mainMenu = () => {
                     break
                 case "Remove Role":
                     removeRole()
+                    break
+                case "Update Employee Role":
+                    updateRole()
                     break
             }
         })
@@ -253,5 +256,139 @@ const viewRoles = () => {
         // Displays the employees
         console.table(res)
         mainMenu()
+    })
+}
+
+const addRole = () => {   
+    connection.query("SELECT * FROM department", (err, res) => {
+        if (err) throw err
+        inquirer
+            .prompt([
+                {
+                    type: "input",
+                    message: "What role would you like to add?",
+                    name: "role"
+                },
+                {
+                    type: "input",
+                    message: "What is the salary for this role?",
+                    name: "salary",
+                    validate: value => {
+                        if (isNaN(value) === true) {
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
+                },
+                {
+                    type: "list",
+                    message: "What is the department for this role?",
+                    name: "department",
+                    choices: () => {
+                        let departmentArr = [] // Declare empty array to store current departments in
+                        
+                        // Push departments to array
+                        for (let i = 0; i < res.length; i++) {
+                            departmentArr.push(`${res[i].id} ${res[i].name}`)
+                        }
+
+                        return departmentArr
+                    }
+                }
+            ])
+            .then(answers => {
+                let departmentID = parseInt(answers.department.split(' ')[0]) // parse int response and split at spaces then return first index
+
+                connection.query("INSERT INTO role SET ?", {
+                    title: answers.role.charAt(0).toUpperCase() + answers.role.slice(1).trim(),
+                    salary: answers.salary,
+                    department_id: departmentID
+                }, err => {
+                    if (err) throw err
+                    console.log("Successfully added role")
+                    mainMenu()
+                })
+            })
+    })
+}
+
+const removeRole = () => {
+    connection.query("SELECT * FROM role", (err, res) => {
+        if (err) throw err
+        console.table(res)
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    message: "Which role would you like to remove?",
+                    choices: () => {
+                        let roleArr = [] // Declare empty array to store current departments in
+
+                        // Push departments to array
+                        for (let i = 0; i < res.length; i++) {
+                            roleArr.push(`${res[i].id} ${res[i].title}`)
+                        }
+
+                        return roleArr
+                    },
+                    name: "role"
+                }
+            ])
+            .then(answer => {
+                let roleID = parseInt(answer.role.split(' ')[0]) // parse int response and split at spaces then return first index
+                
+                connection.query("DELETE FROM role WHERE id = ?", [roleID], (err, res) => {
+                    if (err) throw err
+                    console.log("Role successfully deleted from database")
+                    mainMenu()
+                })
+            })
+
+    })
+}
+
+const updateRole = () => {
+    let positions = getRoles()
+    connection.query("SELECT * FROM employee", (err, res) => {
+        if (err) throw err
+        console.table(res)
+        
+        inquirer
+            .prompt([
+                {
+                    type: "list",
+                    message: "Which employees role do you want to update?",
+                    choices: () => {
+                        let employeeArr = [] // Declare empty array to store current employees in
+
+                        // Push employees to array
+                        for (let i = 0; i < res.length; i++) {
+                            employeeArr.push(`${res[i].id} ${res[i].first_name} ${res[i].last_name}`)
+                        }
+
+                        return employeeArr
+                    },
+                    name: "employee"
+                },
+                {
+                    type: "list",
+                    message: "What role would we be updating this role to?",
+                    choices: positions,
+                    name: "role"
+                },
+            ])
+            .then(answers => {
+                let employeeID = parseInt(answers.employee.split(' ')[0]) // parse int response and split at spaces then return first index
+
+                let roleID = positions.indexOf(answers.role) + 1 // get the role id like the add function
+
+                connection.query("UPDATE employee SET role_id=? WHERE id=?", [roleID, employeeID], err => {
+                    if (err) throw err
+                    console.log("Employee updated successfully")
+                    mainMenu()
+                })
+
+            })
     })
 }
